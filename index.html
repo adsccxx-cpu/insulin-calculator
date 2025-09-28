@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>手機優化胰島素補打計算器</title>
+<title>胰島素補打計算器</title>
 <style>
   body { font-family: Arial, sans-serif; padding: 10px; background: #f5f5f5; }
   h1 { text-align: center; font-size: 1.5em; margin-bottom: 15px; }
@@ -16,7 +16,7 @@
 </style>
 </head>
 <body>
-<h1>手機優化胰島素補打計算器</h1>
+<h1>胰島素補打計算器</h1>
 
 <!-- 第一部分：計算 ISF / ICR -->
 <div class="section">
@@ -47,4 +47,72 @@
 <!-- 第二部分：補打速效計算 -->
 <div class="section">
   <h3>二、補打速效胰島素計算</h3>
-  <label>目前血糖 (mg/dL)：<input type="number" id="cur
+  <label>目前血糖 (mg/dL)：<input type="number" id="currentBG" oninput="calcCorrection()"></label>
+  <label>目標血糖 (mg/dL)：<input type="number" id="targetBG" value="100" oninput="calcCorrection()"></label>
+  <label>碳水量 (g)：<input type="number" id="carbs" oninput="calcCorrection()"></label>
+  <div class="result" id="step2Result"></div>
+</div>
+
+<script>
+let ISF = 0;
+let ICR = 0;
+
+function calcISFICR() {
+  const tdd = parseFloat(document.getElementById("tdd").value);
+  const rule = document.getElementById("ruleSelect").value;
+  if (!isNaN(tdd) && tdd > 0) {
+    const isfConst = rule === "1800/500" ? 1800 : 1500;
+    const icrConst = rule === "1800/500" ? 500 : 450;
+    ISF = Math.floor(isfConst / tdd);
+    ICR = Math.floor(icrConst / tdd);
+
+    // 更新滑桿和數值顯示
+    document.getElementById("isfSlider").value = ISF;
+    document.getElementById("isfValue").innerText = ISF;
+    document.getElementById("icrSlider").value = ICR;
+    document.getElementById("icrValue").innerText = ICR;
+
+    document.getElementById("step1Result").innerHTML =
+      `👉 ISF：1 U ≈ 降 <b>${ISF}</b> mg/dL<br>👉 ICR：1 U ≈ 可處理 <b>${ICR}</b> g 碳水`;
+
+    calcCorrection();
+  }
+}
+
+function updateISF() {
+  ISF = parseFloat(document.getElementById("isfSlider").value);
+  document.getElementById("isfValue").innerText = ISF;
+}
+
+function updateICR() {
+  ICR = parseFloat(document.getElementById("icrSlider").value);
+  document.getElementById("icrValue").innerText = ICR;
+}
+
+function calcCorrection() {
+  if (ISF <= 0 || ICR <= 0) return;
+
+  const currentBG = parseFloat(document.getElementById("currentBG").value);
+  const targetBG = parseFloat(document.getElementById("targetBG").value);
+  const carbs = parseFloat(document.getElementById("carbs").value);
+
+  if (isNaN(currentBG) || isNaN(targetBG) || isNaN(carbs)) {
+    document.getElementById("step2Result").innerHTML = '';
+    return;
+  }
+
+  let correctionDose = currentBG > targetBG ? (currentBG - targetBG)/ISF : 0;
+  let mealDose = carbs/ICR;
+  let totalDose = Math.floor(correctionDose + mealDose);
+
+  document.getElementById("step2Result").innerHTML =
+    `👉 高血糖修正劑量：${correctionDose.toFixed(1)} U<br>
+     👉 餐點劑量：${mealDose.toFixed(1)} U<br>
+     ✅ 建議補打速效總劑量：<b>${totalDose}</b> U`;
+}
+
+// 初始化滑桿與計算
+calcISFICR();
+</script>
+</body>
+</html>
