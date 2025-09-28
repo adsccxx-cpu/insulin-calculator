@@ -120,13 +120,35 @@ function updateDose(){
   const current = parseFloat(document.getElementById("currentBg").value);
   const target = parseFloat(document.getElementById("targetBg").value);
   const carbs = parseFloat(document.getElementById("carbs").value);
+  
   if(!isf || !icr || !current || !target){ 
-    document.getElementById("doseResult").innerHTML = "修正劑量：-- U<br>餐點劑量：-- U<br>補打總劑量：-- U"; 
+    document.getElementById("doseResult").innerHTML = 
+      "修正劑量：-- U<br>餐點劑量：-- U<br>補打總劑量：-- U"; 
     return;
   }
-  let correction = current>target ? (current-target)/isf : 0;
+
+  // 血糖安全檢查
+  if(current < 70){
+    document.getElementById("doseResult").innerHTML = 
+      "⚠ 低血糖危險！請立即補充15克糖，切勿補打胰島素！";
+    return;
+  }
+
+  let correction = 0;
   let meal = carbs ? carbs/icr : 0;
-  let total = Math.floor(correction + meal);
+  let total = 0;
+
+  if(current < 100){
+    document.getElementById("doseResult").innerHTML = 
+      `⚠ 目前血糖 < 100，不建議補打胰島素，請依照進食量調整劑量！<br>
+       餐點劑量：${meal.toFixed(1)} U`;
+    return;
+  }
+
+  // 正常計算補打劑量
+  correction = (current-target)/isf;
+  total = Math.floor(correction + meal);
+
   document.getElementById("doseResult").innerHTML = 
     `修正劑量：${correction.toFixed(1)} U<br>
      餐點劑量：${meal.toFixed(1)} U<br>
