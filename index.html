@@ -1,173 +1,142 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <title>胰島素補打計算器</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: auto;
-      padding: 20px;
-      line-height: 1.6;
-    }
-    h1 {
-      text-align: center;
-    }
-    .section {
-      margin-bottom: 20px;
-      padding: 15px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      background: #f9f9f9;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input[type=number], input[type=range], select, button {
-      margin-top: 5px;
-      padding: 6px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .slider-value {
-      font-weight: bold;
-      margin-left: 10px;
-    }
-    button {
-      margin-top: 15px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    .result {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #333;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>胰島素補打計算</title>
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0; padding: 10px;
+  background: #f0f2f5; color: #333;
+}
+h1 { text-align: center; margin-bottom: 20px; color: #0275d8; }
+.section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+h2 { margin-top: 0; color: #555; }
+label { display: block; margin-top: 12px; font-weight: bold; }
+input, select { width: 100%; padding: 10px; margin-top: 5px; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+button { margin-top: 15px; padding: 12px; width: 100%; font-size: 1rem; border-radius: 6px; border: none; background: #0275d8; color: #fff; cursor: pointer; transition: 0.3s; }
+button:hover { background: #025aa5; }
+.result { margin-top: 15px; font-weight: bold; font-size: 1.2rem; color: #d9534f; }
+.tip { font-size: 0.9rem; color: #555; margin-top: 5px; }
+.toast {
+  visibility: hidden; min-width: 200px;
+  background-color: rgba(0,0,0,0.8); color: #fff;
+  text-align: center; border-radius: 6px; padding: 12px;
+  position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%);
+  font-size: 1rem;
+}
+.toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2s; }
+@keyframes fadein { from {bottom: 20px; opacity: 0;} to {bottom: 30px; opacity:1;} }
+@keyframes fadeout { from {bottom: 30px; opacity:1;} to {bottom: 20px; opacity:0;} }
+</style>
 </head>
 <body>
-  <h1>胰島素補打計算器</h1>
 
-  <!-- 法則選擇 -->
-  <div class="section">
-    <h3>選擇計算法則</h3>
-    <select id="ruleSelect" onchange="updateRuleLabel()">
-      <option value="1800/500">1800 / 500 (速效)</option>
-      <option value="1500/450">1500 / 450 (短效)</option>
-    </select>
-  </div>
+<h1>胰島素補打計算</h1>
 
-  <!-- 第一步：計算 ISF / ICR -->
-  <div class="section">
-    <h3>基礎敏感度計算</h3>
-    <label>總胰島素劑量 (TDD)：<input type="number" id="tdd" placeholder="請輸入總單位" value="40"></label>
-    
-    <label>矯正因子 ISF (mg/dL per U)
-      <input type="range" id="isfSlider" min="5" max="200" step="1" oninput="updateISFValue()">
-      <span class="slider-value" id="isfValue">0</span>
-    </label>
+<!-- Toast -->
+<div id="toast" class="toast">數值已更新</div>
 
-    <label>碳水比 ICR (g per U)
-      <input type="range" id="icrSlider" min="5" max="50" step="1" oninput="updateICRValue()">
-      <span class="slider-value" id="icrValue">0</span>
-    </label>
+<!-- 第一部分 -->
+<div class="section" style="border-left:5px solid #0275d8;">
+<h2>一、總胰島素與法則</h2>
+<p class="tip">ISF：每單位胰島素可降低血糖；ICR：每單位胰島素可處理多少克碳水。</p>
+<label>法則選擇：
+<select id="ruleSelect">
+  <option value="1800/500">速效 (1800 / 500)</option>
+  <option value="1500/450">短效 (1500 / 450)</option>
+</select>
+</label>
+<label>每日總胰島素 (TDD)：<input type="number" id="tdd" min="1" placeholder="輸入每日總劑量"></label>
+<button onclick="calculateFactors()">計算 ISF 和 ICR</button>
+</div>
 
-    <button onclick="calcISFICR()">計算 ISF 與 ICR</button>
-    <div class="result" id="step1Result"></div>
-  </div>
+<!-- 第二部分 -->
+<div class="section" style="border-left:5px solid #5cb85c;">
+<h2>二、確認或修改 ISF / ICR</h2>
+<p class="tip">第一部分計算結果已帶入，可修改後按「確認」。</p>
+<label>ISF：<input type="number" id="isfInput"></label>
+<label>ICR：<input type="number" id="icrInput"></label>
+<button onclick="updateFactors()">確認</button>
+</div>
 
-  <!-- 第二步：補打速效劑量 -->
-  <div class="section">
-    <h3>補打速效胰島素計算</h3>
-    <label>目前血糖 (mg/dL)：<input type="number" id="currentBG"></label>
-    <label>目標血糖 (mg/dL)：<input type="number" id="targetBG" value="100"></label>
-    <label>碳水量 (g)：<input type="number" id="carbs"></label>
-    <button onclick="calcCorrection()">計算補打速效劑量</button>
-    <div class="result" id="step2Result"></div>
-  </div>
+<!-- 第三部分 -->
+<div class="section" style="border-left:5px solid #f0ad4e;">
+<h2>三、補打速效胰島素</h2>
+<p class="tip">輸入血糖與碳水量，系統將自動計算補打劑量。</p>
+<label>目前血糖：<input type="number" id="currentBg"></label>
+<label>目標血糖：<input type="number" id="targetBg" value="100"></label>
+<label>餐點碳水量 (g)：<input type="number" id="carbs"></label>
+<div class="result" id="doseResult">
+  修正劑量：-- U<br>
+  餐點劑量：-- U<br>
+  補打總劑量：-- U
+</div>
+</div>
 
-  <script>
-    let ISF = null;
-    let ICR = null;
+<script>
+let isf = null;
+let icr = null;
 
-    function updateRuleLabel() {
-      // 可以依需求做其他更新
-    }
+// 第一部分計算
+function calculateFactors() {
+  const tdd = parseFloat(document.getElementById("tdd").value);
+  const rule = document.getElementById("ruleSelect").value;
+  if(!tdd || tdd <= 0){ alert("請輸入有效 TDD"); return; }
+  if(rule === "1800/500"){ isf = Math.floor(1800/tdd); icr = Math.floor(500/tdd); }
+  else{ isf = Math.floor(1500/tdd); icr = Math.floor(450/tdd); }
+  document.getElementById("isfInput").value = isf;
+  document.getElementById("icrInput").value = icr;
+  updateDose();
+}
 
-    function updateISFValue() {
-      document.getElementById("isfValue").textContent = document.getElementById("isfSlider").value;
-    }
+// 第二部分確認
+function updateFactors() {
+  const valISF = parseFloat(document.getElementById("isfInput").value);
+  const valICR = parseFloat(document.getElementById("icrInput").value);
+  if(!valISF || !valICR){ alert("請輸入有效數值"); return; }
+  isf = valISF; icr = valICR;
+  showToast("ISF / ICR 已更新");
+  updateDose();
+}
 
-    function updateICRValue() {
-      document.getElementById("icrValue").textContent = document.getElementById("icrSlider").value;
-    }
+// Toast 顯示
+function showToast(msg){
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.className = "toast show";
+  setTimeout(()=>{toast.className = toast.className.replace("show","");}, 2500);
+}
 
-    function calcISFICR() {
-      const tdd = parseFloat(document.getElementById("tdd").value);
-      const rule = document.getElementById("ruleSelect").value;
-      if (isNaN(tdd) || tdd <= 0) {
-        alert("請輸入有效的 TDD！");
-        return;
-      }
+// 第三部分自動計算
+function updateDose(){
+  const current = parseFloat(document.getElementById("currentBg").value);
+  const target = parseFloat(document.getElementById("targetBg").value);
+  const carbs = parseFloat(document.getElementById("carbs").value);
+  if(!isf || !icr || !current || !target){ 
+    document.getElementById("doseResult").innerHTML = "修正劑量：-- U<br>餐點劑量：-- U<br>補打總劑量：-- U"; 
+    return;
+  }
+  let correction = current>target ? (current-target)/isf : 0;
+  let meal = carbs ? carbs/icr : 0;
+  let total = Math.floor(correction + meal);
+  document.getElementById("doseResult").innerHTML = 
+    `修正劑量：${correction.toFixed(1)} U<br>
+     餐點劑量：${meal.toFixed(1)} U<br>
+     補打總劑量：${total} U`;
+}
 
-      let isfConst = rule === "1800/500" ? 1800 : 1500;
-      let icrConst = rule === "1800/500" ? 500 : 450;
-
-      ISF = Math.floor(isfConst / tdd);
-      ICR = Math.floor(icrConst / tdd);
-
-      // 更新滑動條初始值
-      const isfSlider = document.getElementById("isfSlider");
-      const icrSlider = document.getElementById("icrSlider");
-      isfSlider.value = ISF;
-      icrSlider.value = ICR;
-      updateISFValue();
-      updateICRValue();
-
-      document.getElementById("step1Result").innerHTML =
-        `👉 ISF (降血糖能力)：1 U ≈ 降 <b>${ISF}</b> mg/dL<br>
-         👉 ICR (碳水比例)：1 U ≈ 覆蓋 <b>${ICR}</b> g 碳水`;
-    }
-
-    function calcCorrection() {
-      if (!ISF || !ICR) {
-        alert("請先完成基礎敏感度計算！");
-        return;
-      }
-
-      const currentBG = parseFloat(document.getElementById("currentBG").value);
-      const targetBG = parseFloat(document.getElementById("targetBG").value);
-      const carbs = parseFloat(document.getElementById("carbs").value);
-
-      if (isNaN(currentBG) || isNaN(targetBG) || isNaN(carbs)) {
-        alert("請完整輸入血糖與碳水數據！");
-        return;
-      }
-
-      let correctionDose = 0;
-      if (currentBG > targetBG) {
-        correctionDose = Math.floor((currentBG - targetBG) / ISF);
-      }
-      const mealDose = Math.floor(carbs / ICR);
-      const totalDose = correctionDose + mealDose;
-
-      document.getElementById("step2Result").innerHTML =
-        `👉 修正劑量 (高血糖修正)：<b>${correctionDose}</b> U<br>
-         👉 餐點劑量 (碳水覆蓋)：<b>${mealDose}</b> U<br>
-         ✅ 建議補打速效總劑量：<b>${totalDose}</b> U`;
-    }
-
-    // 初始化滑動條顯示
-    updateISFValue();
-    updateICRValue();
-  </script>
+// 監控第三部分輸入
+["currentBg","targetBg","carbs"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", updateDose);
+});
+</script>
 </body>
 </html>
