@@ -120,47 +120,42 @@ function showToast(msg){
 // 第三部分自動計算
 function updateDose(){
   const current = parseFloat(document.getElementById("currentBg").value);
-  const warningDiv = document.getElementById("bgWarning");
-  // 清除舊提示
-  warningDiv.textContent = "";
-
-  if(current > 600) {
-    warningDiv.textContent = "⚠️ 可能輸入錯誤，請再確認！如果血糖機顯示HI(>600)，請立即就醫檢查";
-  }
   const target = parseFloat(document.getElementById("targetBg").value);
   const carbs = parseFloat(document.getElementById("carbs").value);
+const warningDiv = document.getElementById("bgWarning");
+    const resultDiv = document.getElementById("doseResult");
 
-// --- 新增：目前血糖輸入錯誤提示 ---
-  if(current > 600 || current < 0) {
-    document.getElementById("doseResult").innerHTML = 
-      "<span style='color:orange;'>⚠️ 目前血糖數值可能輸入錯誤，請再確認！如果血糖機顯示HI(>600)，請立即就醫檢查</span>";
-    return;
-  }
+    // 1. 初始化與清除舊提示
+    warningDiv.textContent = "";
 
-  // --- 新增：目標血糖範圍強制檢查 (若手動輸入超出範圍) ---
-  if(target < 100 || target > 180) {
-    document.getElementById("doseResult").innerHTML = 
-      "<span style='color:orange;'>⚠️ 目標血糖應設定在 100 - 180 之間</span>";
-    return;
-  }
-  
+  // 2. 基礎數值檢查 (必須要有 ISF, ICR, 目前血糖, 目標血糖)
   if(!isf || !icr || !current || !target){ 
     document.getElementById("doseResult").innerHTML = 
       "修正劑量：-- U<br>餐點劑量：-- U<br>補打總劑量：-- U"; 
     return;
   }
 
+  // 3. 目前血糖異常提示
+    if (current > 600 || current < 0) {
+        resultDiv.innerHTML = "<span style='color:orange;'>⚠️ 目前血糖數值可能輸入錯誤，請再確認！如果血糖機顯示HI(>600)，請立即就醫檢查</span>";
+        return;
+    }
+
+    // 4. 目標血糖範圍強制檢查
+    if (target < 100 || target > 180) {
+        resultDiv.innerHTML = "<span style='color:orange;'>⚠️ 目標血糖應設定在 100 - 180 之間</span>";
+        return;
+    }
+
+  
   // 血糖安全檢查
   if(current < 71){
     document.getElementById("doseResult").innerHTML = 
       "⚠ 低血糖危險！請立刻補充15克糖，不可以補打胰島素！";
     return;
   }
-
-  let correction = 0;
-  let meal = carbs ? carbs/icr : 0;
-  let total = 0;
-
+  
+  // 計算修正劑量：如果血糖高於目標才計算
   if(current < target){
     document.getElementById("doseResult").innerHTML = 
       `⚠ 修正劑量：0 U (目前血糖 < 目標值) 如果進食請依下方餐點劑量補打 <br>
@@ -175,6 +170,9 @@ if (total > 20) {
   total = 20;
   correction = Math.max(0, total - meal);
 }
+resultDiv.innerHTML = `<span style='color:orange;'>⚠️ 計算結果超過 20U，為保安全已限制為 20U</span><br>
+
+  
   document.getElementById("doseResult").innerHTML = 
     `修正劑量：${correction.toFixed(1)} U<br>
      餐點劑量：${meal.toFixed(1)} U<br>
