@@ -139,7 +139,7 @@ function updateDose(){
   let meal = carbs ? carbs/icr : 0;
   let total = 0;
 
-  if(current < targetBg){
+  if(current < target){
     document.getElementById("doseResult").innerHTML = 
       `⚠ 目前血糖 < 目標血糖，不建議補打胰島素，請依照進食量調整劑量！<br>
        餐點劑量：${meal.toFixed(1)} U`;
@@ -147,9 +147,10 @@ function updateDose(){
   }
 
   // 正常計算補打劑量
-  correction = (current-target)/isf;
-  total = Math.floor(correction + meal);
-
+correction = Math.max(0, (current - target) / isf);
+total = Math.round((correction + meal) * 2) / 2;
+  if(total > 20) total = 20;
+  
   document.getElementById("doseResult").innerHTML = 
     `修正劑量：${correction.toFixed(1)} U<br>
      餐點劑量：${meal.toFixed(1)} U<br>
