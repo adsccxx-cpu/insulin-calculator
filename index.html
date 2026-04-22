@@ -55,6 +55,7 @@ button:hover { background: #025aa5; }
 </select>
 </label>
 <label>每日總胰島素 (TDD)：<input type="number" id="tdd" min="1" placeholder="輸入每日總劑量"></label>
+ <label>目前體重 (公斤)：<input type="number" id="BW" min="1" placeholder="輸入目前體重"></label>
 <button onclick="calculateFactors()">計算 ISF 和 ICR</button>
 </div>
 
@@ -73,12 +74,12 @@ button:hover { background: #025aa5; }
 <p class="tip">輸入血糖與碳水量，系統將自動計算補打劑量。</p>
 <label>目前血糖：<input type="number" id="currentBg"></label>
   <div id="bgWarning" style="color:orange; font-size:0.8rem; margin-top:5px;"></div>
-<label>目標血糖：<input type="number" id="targetBg" value="150" min="100" max="180"><p class="tip">建議範圍：100 - 180 mg/dL</p></label>
-<label>餐點碳水量 (g)：<input type="number" id="carbs"></label>
+<label>目標血糖：<input type="number" id="targetBg" value="150" min="100" max="180"><p class="tip">建議控制範圍：100 - 180 mg/dL</p></label>
+<label>餐點碳水量 (公克)：<input type="number" id="carbs"></label>
 <div class="result" id="doseResult">
   修正劑量：-- U<br>
   餐點劑量：-- U<br>
-  補打總劑量：-- U
+  建議補打：-- U
 </div>
 </div>
 
@@ -116,67 +117,64 @@ function showToast(msg){
   setTimeout(()=>{toast.className = toast.className.replace("show","");}, 2500);
 }
 
-
 // 第三部分自動計算
-function updateDose() {
-    const current = parseFloat(document.getElementById("currentBg").value);
-    const target = parseFloat(document.getElementById("targetBg").value);
-    const carbs = parseFloat(document.getElementById("carbs").value) || 0; // 若沒輸入碳水則設為 0
+function updateDose(){
+  const current = parseFloat(document.getElementById("currentBg").value);
+  const target = parseFloat(document.getElementById("targetBg").value);
+  const carbs = parseFloat(document.getElementById("carbs").value);
+  
+  if(!isf || !icr || !current || !target){ 
+    document.getElementById("doseResult").innerHTML = 
+      "修正劑量：-- U<br>餐點劑量：-- U<br>建議補打：-- U"; 
+    return;
+  }
 
-    // 2. 基礎數值檢查 (必須要有 ISF, ICR, 目前血糖)
-    if (!isf || !icr || isNaN(current)) {
-        document.getElementById.innerHTML = "修正劑量：-- U<br>餐點劑量：-- U<br>補打總劑量：-- U";
-        return;
-    }
+  // 血糖安全檢查
+  if(current < 70){
+    document.getElementById("doseResult").innerHTML = 
+      "⚠ 低血糖危險！請立刻補充15克糖，不可以補打胰島素！";
+    return;
+  }
 
-    // 3. 目前血糖異常提示
-    if (current > 600 || current < 0) {
-        document.getElementById.innerHTML = "<span style='color:orange;'>⚠️ 目前血糖數值可能輸入錯誤，請再確認！如果血糖機顯示HI(>600)，請立即就醫檢查</span>";
-        return;
-    }
+  let correction = 0;
+  let meal = carbs ? carbs/icr : 0;
+  let total = 0;
+  
+  if(current > 600){
+    document.getElementById("doseResult").innerHTML = 
+    "⚠ 目前血糖值可能輸入錯誤，如果血糖機顯示HI，請立即就醫檢查！"
+    return;
+  }
 
-    // 4. 目標血糖範圍強制檢查
-    if (target < 100 || target > 180) {
-       document.getElementById.innerHTML = "<span style='color:orange;'>⚠️ 目標血糖應設定在 100 - 180 之間</span>";
-        return;
-    }
+  if(current < target){
+    document.getElementById("doseResult").innerHTML = 
+      `⚠ 修正劑量：0 U (目前血糖 < 目標值)，如果有進食請依照下方劑量補打 <br>
+       建議補打(餐點劑量)：${meal.toFixed(1)} U`
+    return;
+  }
 
-    // 5. 血糖安全檢查
-    if (current < 71) {
-      document.getElementById.innerHTML = "⚠ 低血糖危險！請立刻補充15克糖，不可以補打胰島素！";
-        return;
-    }
+  if(target <100){
+    document.getElementById("doseResult").innerHTML = 
+    "⚠ 目標血糖值可能輸入錯誤，請設定在100~180之間！"
+    return;
+  }
+  
+  if(target >180){
+    document.getElementById("doseResult").innerHTML = 
+    "⚠ 目標血糖值可能輸入錯誤，請設定在100~180之間！"
+    return;
+  }
 
-    // --- 開始計算 ---
-    let meal = carbs / icr; // 計算餐點劑量
-    let correction = 0;
+  // 正常計算補打劑量
+  correction = (current-target)/isf;
+  total = Math.floor(correction + meal);
 
-    // 計算修正劑量：如果血糖高於目標才計算
-    if (current > target) {
-        correction = (current - target) / isf;
-    }
-
-    let total = Math.floor(correction + meal) ; //無條件捨去
-    let safetyNotice = "";
-
-    // 安全限制：單次最高 20U
-    if (total > 20) {
-        total = 20;
-        safetyNotice = "<span style='color:orange;'>⚠️ 計算結果超過 20U，為保安全已限制為 20U</span><br>";
-    }
-
-    // 顯示結果
-    if (current < target) {
-       document.getElementById.innerHTML = `⚠ 修正劑量：0 U (目前血糖 < 目標值)<br>
-                               餐點劑量：${meal.toFixed(1)} U<br>
-                               建議補打：${Math.floor(meal) } U`;
-    } else {
-        document.getElementById.innerHTML = `${safetyNotice}
-                               修正劑量：${correction.toFixed(1)} U<br>
-                               餐點劑量：${meal.toFixed(1)} U<br>
-                               <b>補打總劑量：${total} U</b>`;
-    }
-
+  document.getElementById("doseResult").innerHTML = 
+    `修正劑量：${correction.toFixed(1)} U<br>
+     餐點劑量：${meal.toFixed(1)} U<br>
+     建議補打：${total} U`; 
+}
+ 
 // 監控第三部分輸入
 ["currentBg","targetBg","carbs"].forEach(id=>{
   document.getElementById(id).addEventListener("input", updateDose);
