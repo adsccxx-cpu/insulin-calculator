@@ -129,7 +129,7 @@ function updateDose(){
   }
 
   // 血糖安全檢查
-  if(current < 70){
+  if(current < 71){
     document.getElementById("doseResult").innerHTML = 
       "⚠ 低血糖危險！請立即補充15克糖，切勿補打胰島素！";
     return;
@@ -141,16 +141,15 @@ function updateDose(){
 
   if(current < target){
     document.getElementById("doseResult").innerHTML = 
-      `⚠ 目前血糖 < 目標血糖，不建議補打胰島素，請依照進食量調整劑量！<br>
+      `⚠ 目前血糖 < 目標值，不用修正補打，如果有進食請依碳水調整劑量！<br>
        餐點劑量：${meal.toFixed(1)} U`;
     return;
   }
 
   // 正常計算補打劑量
 correction = Math.max(0, (current - target) / isf);
-total = Math.round((correction + meal) * 2) / 2;
-  if(total > 20) total = 20;
-  
+total = Math.floor(correction + meal);
+if (total > 20) total = 20;
   document.getElementById("doseResult").innerHTML = 
     `修正劑量：${correction.toFixed(1)} U<br>
      餐點劑量：${meal.toFixed(1)} U<br>
