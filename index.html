@@ -164,7 +164,7 @@ function updateDose(){
     return;
  }
   
-  if(current>100 and current < target){
+  if(current < target){
   document.getElementById("doseResult").innerHTML = 
     `⚠ 修正劑量：0 U (目前血糖 < 目標值)，如果有進食請依照下方劑量補打 <br>
      建議補打(餐點劑量)：${Math.floor(meal)} U`
