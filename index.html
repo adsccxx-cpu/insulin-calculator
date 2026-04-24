@@ -78,26 +78,26 @@ button:hover { background: #025aa5; }
     <option value="1500/450">短效 (1500 / 450)</option>
   </select>
   </label>
-  <label>每日總胰島素 (TDD)：<input type="number" id="tdd" min="1" placeholder="輸入每日總劑量"></label>
+  <label>每日總胰島素 (TDD)：<input type="number" id="tdd" min="1" inputmode="decimal" placeholder="輸入每日總劑量"></label>
   <button onclick="calculateFactors()">計算 ISF 和 ICR</button>
 </div>
 
 <div class="section" style="border-left:5px solid #5cb85c;">
   <h2>二、確認或修改 ISF / ICR</h2>
-  <label>ISF：<input type="number" id="isfInput"></label>
-  <label>ICR：<input type="number" id="icrInput"></label>
+  <label>ISF：<input type="number" id="isfInput" inputmode="decimal"></label>
+  <label>ICR：<input type="number" id="icrInput" inputmode="decimal"></label>
   <button onclick="updateFactors()">確認</button>
 </div>
 
 <div class="section" style="border-left:5px solid #f0ad4e;">
   <h2>三、補打速效胰島素</h2>
   <p class="tip">輸入後將自動計算補打劑量。</p>
-  <label>目前血糖：<input type="number" id="currentBg"></label>
-  <label>目標血糖：<input type="number" id="targetBg" value="150" min="100" max="180"><p class="tip">建議範圍：100 - 180 mg/dL</p></label>
+  <label>目前血糖：<input type="number" id="currentBg" inputmode="numeric"></label>
+  <label>目標血糖：<input type="number" id="targetBg" value="150" min="100" max="180" inputmode="numeric"><p class="tip">建議範圍：100 - 180 mg/dL</p></label>
   
   <label>餐點碳水量 (公克)：</label>
   <div class="input-group">
-    <input type="number" id="carbs" placeholder="請輸入或貼上數值">
+    <input type="number" id="carbs" inputmode="decimal" placeholder="請輸入或貼上數值">
     <button class="paste-btn" onclick="pasteCarbs()">📋 貼上</button>
   </div>
 
