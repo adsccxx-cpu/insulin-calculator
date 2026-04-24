@@ -35,51 +35,67 @@ button:hover { background: #025aa5; }
 .toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2s; }
 @keyframes fadein { from {bottom: 20px; opacity: 0;} to {bottom: 30px; opacity:1;} }
 @keyframes fadeout { from {bottom: 30px; opacity:1;} to {bottom: 20px; opacity:0;} }
+
+/* 連結按鈕專用樣式 */
+.link-button {
+  background: #6c757d;
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  color: white;
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+.link-button:hover { background: #5a6268; }
 </style>
 </head>
 <body>
 
 <h1>胰島素補打計算</h1>
 
-<!-- Toast -->
 <div id="toast" class="toast">數值已更新</div>
 
-<!-- 第一部分 -->
 <div class="section" style="border-left:5px solid #0275d8;">
-<h2>一、總胰島素與法則</h2>
-<p class="tip">ISF：每單位胰島素可降低血糖；ICR：每單位胰島素可處理多少克碳水。</p>
-<label>法則選擇：
-<select id="ruleSelect">
-  <option value="1800/500">速效 (1800 / 500)</option>
-  <option value="1500/450">短效 (1500 / 450)</option>
-</select>
-</label>
-<label>每日總胰島素 (TDD)：<input type="number" id="tdd" min="1" placeholder="輸入每日總劑量"></label>
-<button onclick="calculateFactors()">計算 ISF 和 ICR</button>
+  <h2>一、總胰島素與法則</h2>
+  <p class="tip">ISF：每單位胰島素可降低血糖；ICR：每單位胰島素可處理多少克碳水。</p>
+  <label>法則選擇：
+  <select id="ruleSelect">
+    <option value="1800/500">速效 (1800 / 500)</option>
+    <option value="1500/450">短效 (1500 / 450)</option>
+  </select>
+  </label>
+  <label>每日總胰島素 (TDD)：<input type="number" id="tdd" min="1" placeholder="輸入每日總劑量"></label>
+  <button onclick="calculateFactors()">計算 ISF 和 ICR</button>
 </div>
 
-<!-- 第二部分 -->
 <div class="section" style="border-left:5px solid #5cb85c;">
-<h2>二、確認或修改 ISF / ICR</h2>
-<p class="tip">第一部分計算結果已帶入，可修改後按「確認」。</p>
-<label>ISF：<input type="number" id="isfInput"></label>
-<label>ICR：<input type="number" id="icrInput"></label>
-<button onclick="updateFactors()">確認</button>
+  <h2>二、確認或修改 ISF / ICR</h2>
+  <p class="tip">第一部分計算結果已帶入，可修改後按「確認」。</p>
+  <label>ISF：<input type="number" id="isfInput"></label>
+  <label>ICR：<input type="number" id="icrInput"></label>
+  <button onclick="updateFactors()">確認</button>
 </div>
 
-<!-- 第三部分 -->
 <div class="section" style="border-left:5px solid #f0ad4e;">
-<h2>三、補打速效胰島素</h2>
-<p class="tip">輸入血糖與碳水量，系統將自動計算補打劑量。</p>
-<label>目前血糖：<input type="number" id="currentBg"></label>
+  <h2>三、補打速效胰島素</h2>
+  <p class="tip">輸入血糖與碳水量，系統將自動計算補打劑量。</p>
+  <label>目前血糖：<input type="number" id="currentBg"></label>
   <div id="bgWarning" style="color:orange; font-size:0.8rem; margin-top:5px;"></div>
-<label>目標血糖：<input type="number" id="targetBg" value="150" min="100" max="180"><p class="tip">建議控制範圍：100 - 180 mg/dL，飯後補打建議設定為 150 mg/dL </p></label>
-<label>餐點碳水量 (公克)：<input type="number" id="carbs"></label>
-<div class="result" id="doseResult">
-  修正劑量：-- U<br>
-  餐點劑量：-- U<br>
-  建議補打：-- U
+  <label>目標血糖：<input type="number" id="targetBg" value="150" min="100" max="180"><p class="tip">建議控制範圍：100 - 180 mg/dL，飯後補打建議設定為 150 mg/dL </p></label>
+  <label>餐點碳水量 (公克)：<input type="number" id="carbs"></label>
+  <div class="result" id="doseResult">
+    修正劑量：-- U<br>
+    餐點劑量：-- U<br>
+    建議補打：-- U
+  </div>
 </div>
+
+<div class="section" style="border-left:5px solid #6c757d;">
+  <h2>四、實用工具連結</h2>
+  <p class="tip">輔助計算每餐攝取的碳水化合物含量：</p>
+  <a href="https://adsccxx-cpu.github.io/index.html/" target="_blank" class="link-button">前往：碳水化合物計算機</a>
 </div>
 
 <script>
@@ -145,32 +161,25 @@ function updateDose(){
     return;
   }
   
-  if(target <100){
+  if(target < 100 || target > 180){
     document.getElementById("doseResult").innerHTML = 
     "⚠ 目標血糖值可能輸入錯誤，請設定在100~180之間！"
     return;
   }
   
-    if(target >180){
-    document.getElementById("doseResult").innerHTML = 
-    "⚠ 目標血糖值可能輸入錯誤，請設定在100~180之間！"
-    return;
-  }
-  
-  if(current <100){
+  if(current < 100){
     document.getElementById("doseResult").innerHTML =
       `⚠ 修正劑量：0 U (目前血糖 < 100)，如果有進食請依照下方劑量補打 <br>
      建議補打(餐點劑量)：${Math.floor(meal*0.5)} U`
     return;
- }
+  }
   
   if(current < target){
-  document.getElementById("doseResult").innerHTML = 
-    `⚠ 修正劑量：0 U (目前血糖 < 目標值)，如果有進食請依照下方劑量補打 <br>
-     建議補打(餐點劑量)：${Math.floor(meal)} U`
-  return;
+    document.getElementById("doseResult").innerHTML = 
+      `⚠ 修正劑量：0 U (目前血糖 < 目標值)，如果有進食請依照下方劑量補打 <br>
+       建議補打(餐點劑量)：${Math.floor(meal)} U`
+    return;
   }
-
 
   // 正常計算補打劑量
   correction = (current-target)/isf;
