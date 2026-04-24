@@ -49,9 +49,11 @@ input, select { width: 100%; padding: 12px; margin-top: 5px; font-size: 1rem; bo
 
 .result { margin-top: 15px; font-weight: bold; font-size: 1.2rem; color: #d9534f; line-height: 1.6; }
 .tip { font-size: 0.85rem; color: #666; margin-top: 5px; }
+
+/* Toast 提示樣式 */
 .toast {
   visibility: hidden; min-width: 200px;
-  background-color: rgba(0,0,0,0.8); color: #fff;
+  background-color: rgba(0,0,0,0.85); color: #fff;
   text-align: center; border-radius: 6px; padding: 12px;
   position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%);
   font-size: 1rem;
@@ -137,6 +139,14 @@ input, select { width: 100%; padding: 12px; margin-top: 5px; font-size: 1rem; bo
 </div>
 
 <script>
+// 顯示提示訊息
+function showToast(msg){
+  const toast = document.getElementById("toast");
+  toast.textContent = msg;
+  toast.className = "toast show";
+  setTimeout(()=>{toast.className = toast.className.replace("show","");}, 2500);
+}
+
 // 貼上按鈕
 async function pasteCarbs() {
   try {
@@ -152,7 +162,7 @@ async function pasteCarbs() {
   }
 }
 
-// 自動根據 TDD 計算 ISF 和 ICR
+// 第一部分自動計算
 function autoCalculateFactors() {
   const tdd = parseFloat(document.getElementById("tdd").value);
   const rule = document.getElementById("ruleSelect").value;
@@ -173,13 +183,6 @@ function autoCalculateFactors() {
   updateDose();
 }
 
-function showToast(msg){
-  const toast = document.getElementById("toast");
-  toast.textContent = msg;
-  toast.className = "toast show";
-  setTimeout(()=>{toast.className = toast.className.replace("show","");}, 2500);
-}
-
 // 核心計算邏輯
 function updateDose(){
   const isf = parseFloat(document.getElementById("isfInput").value);
@@ -188,7 +191,6 @@ function updateDose(){
   const target = parseFloat(document.getElementById("targetBg").value);
   const carbs = parseFloat(document.getElementById("carbs").value);
   
-  // 檢查基本數值是否存在
   if(!isf || !icr || isNaN(current) || isNaN(target)){ 
     document.getElementById("doseResult").innerHTML = "修正劑量：-- U<br>餐點劑量：-- U<br>建議補打：-- U"; 
     return;
@@ -196,7 +198,6 @@ function updateDose(){
 
   let meal = !isNaN(carbs) ? carbs/icr : 0;
   
-  // 安全檢查
   if(current < 71){
     document.getElementById("doseResult").innerHTML = "⚠ 低血糖危險！請立刻補充15克糖，不可補打！";
     return;
@@ -229,7 +230,11 @@ function updateDose(){
 document.getElementById("tdd").addEventListener("input", autoCalculateFactors);
 document.getElementById("ruleSelect").addEventListener("change", autoCalculateFactors);
 
-// 監聽二、三部分所有欄位，達到全即時連動
+// 監聽第二部分手動修改 (加入 Toast 提醒)
+document.getElementById("isfInput").addEventListener("change", () => showToast("ISF 已手動更新"));
+document.getElementById("icrInput").addEventListener("change", () => showToast("ICR 已手動更新"));
+
+// 監聽所有即時計算欄位
 ["isfInput", "icrInput", "currentBg", "targetBg", "carbs"].forEach(id => {
   document.getElementById(id).addEventListener("input", updateDose);
 });
