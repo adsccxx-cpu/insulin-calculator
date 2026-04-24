@@ -10,7 +10,17 @@ body {
   margin: 0; padding: 10px;
   background: #f0f2f5; color: #333;
 }
-h1 { text-align: center; margin-bottom: 20px; color: #0275d8; }
+h1 { text-align: center; margin-bottom: 5px; color: #0275d8; }
+.instruction {
+  background: #e7f3ff;
+  border: 1px solid #b2d4ff;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #0056b3;
+}
 .section {
   background: #fff;
   border-radius: 12px;
@@ -18,26 +28,27 @@ h1 { text-align: center; margin-bottom: 20px; color: #0275d8; }
   margin-bottom: 20px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
-h2 { margin-top: 0; color: #555; }
+h2 { margin-top: 0; color: #555; font-size: 1.2rem; }
 label { display: block; margin-top: 12px; font-weight: bold; }
-input, select { width: 100%; padding: 10px; margin-top: 5px; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
-button { margin-top: 15px; padding: 12px; width: 100%; font-size: 1rem; border-radius: 6px; border: none; background: #0275d8; color: #fff; cursor: pointer; transition: 0.3s; }
-button:hover { background: #025aa5; }
+input, select { width: 100%; padding: 12px; margin-top: 5px; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
 
-/* 碳水輸入框與貼上按鈕配置 */
 .input-group { display: flex; gap: 8px; align-items: flex-end; }
 .input-group input { flex: 1; }
 .paste-btn { 
   background: #6c757d; 
-  padding: 10px; 
+  padding: 12px; 
   width: auto; 
-  margin-top: 0; 
-  font-size: 0.9rem;
+  margin-top: 5px; 
+  font-size: 0.95rem;
+  color: white;
+  border: none;
+  border-radius: 6px;
   white-space: nowrap;
+  cursor: pointer;
 }
 
-.result { margin-top: 15px; font-weight: bold; font-size: 1.2rem; color: #d9534f; }
-.tip { font-size: 0.9rem; color: #555; margin-top: 5px; }
+.result { margin-top: 15px; font-weight: bold; font-size: 1.2rem; color: #d9534f; line-height: 1.6; }
+.tip { font-size: 0.85rem; color: #666; margin-top: 5px; }
 .toast {
   visibility: hidden; min-width: 200px;
   background-color: rgba(0,0,0,0.8); color: #fff;
@@ -60,44 +71,56 @@ button:hover { background: #025aa5; }
   border-radius: 6px;
   transition: 0.3s;
 }
-.link-button:hover { background: #5a6268; }
 </style>
 </head>
 <body>
 
 <h1>胰島素補打計算</h1>
 
+<div class="instruction">
+  💡 <b>使用說明：</b><br>
+  1. 若已知醫師指示之確定的 <b>ISF</b> 與 <b>ICR</b>，可跳過第一部分，直接於第二部分輸入數值。<br>
+  2. 若不確定，請從第一部分輸入每日總劑量 (TDD) 進行估算。
+</div>
+
 <div id="toast" class="toast">數值已更新</div>
 
 <div class="section" style="border-left:5px solid #0275d8;">
-  <h2>一、總胰島素與法則</h2>
-  <p class="tip">ISF：每單位藥降多少血糖；ICR：每單位藥處理多少碳水。</p>
+  <h2>一、估算係數 (若未知則填寫)</h2>
   <label>法則選擇：
   <select id="ruleSelect">
     <option value="1800/500">速效 (1800 / 500)</option>
     <option value="1500/450">短效 (1500 / 450)</option>
   </select>
   </label>
-  <label>每日總胰島素 (TDD)：<input type="number" id="tdd" min="1" inputmode="decimal" placeholder="輸入每日總劑量"></label>
-  <button onclick="calculateFactors()">計算 ISF 和 ICR</button>
+  <label>每日總胰島素 (TDD)：</label>
+  <input type="number" id="tdd" inputmode="decimal" placeholder="請輸入每日總劑量">
+  <p class="tip">※ 輸入後將自動帶入下方 ISF 與 ICR。</p>
 </div>
 
 <div class="section" style="border-left:5px solid #5cb85c;">
-  <h2>二、確認或修改 ISF / ICR</h2>
-  <label>ISF：<input type="number" id="isfInput" inputmode="decimal"></label>
-  <label>ICR：<input type="number" id="icrInput" inputmode="decimal"></label>
-  <button onclick="updateFactors()">確認</button>
+  <h2>二、確認或輸入 ISF / ICR</h2>
+  <label>ISF 胰島素敏感因子：</label>
+  <input type="number" id="isfInput" inputmode="decimal" placeholder="例如：40">
+  <p class="tip">每 1 單位胰島素可降低的血糖值 (mg/dL)</p>
+  
+  <label>ICR 胰島素與碳水化合物比值：</label>
+  <input type="number" id="icrInput" inputmode="decimal" placeholder="例如：10">
+  <p class="tip">每 1 單位胰島素可處理的碳水化合物克數 (g)</p>
 </div>
 
 <div class="section" style="border-left:5px solid #f0ad4e;">
   <h2>三、補打速效胰島素</h2>
-  <p class="tip">輸入後將自動計算補打劑量。</p>
-  <label>目前血糖：<input type="number" id="currentBg" inputmode="numeric"></label>
-  <label>目標血糖：<input type="number" id="targetBg" value="150" min="100" max="180" inputmode="numeric"><p class="tip">建議範圍：100 - 180 mg/dL</p></label>
+  <label>目前血糖：</label>
+  <input type="number" id="currentBg" inputmode="numeric" placeholder="請測量血糖">
+  
+  <label>目標血糖：</label>
+  <input type="number" id="targetBg" value="150" min="100" max="180" inputmode="numeric">
+  <p class="tip">建議範圍：100 - 180 mg/dL</p>
   
   <label>餐點碳水量 (公克)：</label>
   <div class="input-group">
-    <input type="number" id="carbs" inputmode="decimal" placeholder="請輸入或貼上數值">
+    <input type="number" id="carbs" inputmode="decimal" placeholder="請輸入或貼上">
     <button class="paste-btn" onclick="pasteCarbs()">📋 貼上</button>
   </div>
 
@@ -114,10 +137,7 @@ button:hover { background: #025aa5; }
 </div>
 
 <script>
-let isf = null;
-let icr = null;
-
-// 貼上按鈕功能
+// 貼上按鈕
 async function pasteCarbs() {
   try {
     const text = await navigator.clipboard.readText();
@@ -126,31 +146,30 @@ async function pasteCarbs() {
       document.getElementById("carbs").value = num;
       showToast("已貼上碳水量：" + num + "g");
       updateDose();
-    } else {
-      alert("剪貼簿內容不是有效的數字喔！");
     }
   } catch (err) {
-    alert("無法讀取剪貼簿，請手動輸入。 (請檢查瀏覽器權限)");
+    alert("無法讀取剪貼簿，請手動輸入。");
   }
 }
 
-function calculateFactors() {
+// 自動根據 TDD 計算 ISF 和 ICR
+function autoCalculateFactors() {
   const tdd = parseFloat(document.getElementById("tdd").value);
   const rule = document.getElementById("ruleSelect").value;
-  if(!tdd || tdd <= 0){ alert("請輸入有效 TDD"); return; }
-  if(rule === "1800/500"){ isf = Math.floor(1800/tdd); icr = Math.floor(500/tdd); }
-  else{ isf = Math.floor(1500/tdd); icr = Math.floor(450/tdd); }
-  document.getElementById("isfInput").value = isf;
-  document.getElementById("icrInput").value = icr;
-  updateDose();
-}
-
-function updateFactors() {
-  const valISF = parseFloat(document.getElementById("isfInput").value);
-  const valICR = parseFloat(document.getElementById("icrInput").value);
-  if(!valISF || !valICR){ alert("請輸入有效數值"); return; }
-  isf = valISF; icr = valICR;
-  showToast("ISF / ICR 已更新");
+  
+  if (tdd > 0) {
+    let isf, icr;
+    if(rule === "1800/500"){ 
+      isf = Math.floor(1800/tdd); 
+      icr = Math.floor(500/tdd); 
+    } else { 
+      isf = Math.floor(1500/tdd); 
+      icr = Math.floor(450/tdd); 
+    }
+    document.getElementById("isfInput").value = isf;
+    document.getElementById("icrInput").value = icr;
+    showToast("係數已根據 TDD 更新");
+  }
   updateDose();
 }
 
@@ -161,29 +180,29 @@ function showToast(msg){
   setTimeout(()=>{toast.className = toast.className.replace("show","");}, 2500);
 }
 
+// 核心計算邏輯
 function updateDose(){
+  const isf = parseFloat(document.getElementById("isfInput").value);
+  const icr = parseFloat(document.getElementById("icrInput").value);
   const current = parseFloat(document.getElementById("currentBg").value);
   const target = parseFloat(document.getElementById("targetBg").value);
   const carbs = parseFloat(document.getElementById("carbs").value);
   
+  // 檢查基本數值是否存在
   if(!isf || !icr || isNaN(current) || isNaN(target)){ 
-    document.getElementById("doseResult").innerHTML = 
-      "修正劑量：-- U<br>餐點劑量：-- U<br>建議補打：-- U"; 
+    document.getElementById("doseResult").innerHTML = "修正劑量：-- U<br>餐點劑量：-- U<br>建議補打：-- U"; 
     return;
   }
 
   let meal = !isNaN(carbs) ? carbs/icr : 0;
   
+  // 安全檢查
   if(current < 71){
-    document.getElementById("doseResult").innerHTML = "⚠ 低血糖危險！請立刻補充15克糖，不可以補打！";
+    document.getElementById("doseResult").innerHTML = "⚠ 低血糖危險！請立刻補充15克糖，不可補打！";
     return;
   }
   if(current > 599){
-    document.getElementById("doseResult").innerHTML = "⚠ 血糖值過高(HI)，請立即就醫！";
-    return;
-  }
-  if(target < 100 || target > 180){
-    document.getElementById("doseResult").innerHTML = "⚠ 目標血糖需設定在100~180之間！";
+    document.getElementById("doseResult").innerHTML = "⚠ 血糖過高(HI)，請立即就醫！";
     return;
   }
   
@@ -197,7 +216,7 @@ function updateDose(){
     return;
   }
 
-  let correction = (current-target)/isf;
+  let correction = (current - target) / isf;
   let total = Math.floor(correction + meal);
 
   document.getElementById("doseResult").innerHTML = 
@@ -206,7 +225,12 @@ function updateDose(){
      建議補打：${total} U`; 
 }
  
-["currentBg","targetBg","carbs"].forEach(id=>{
+// 監聽第一部分
+document.getElementById("tdd").addEventListener("input", autoCalculateFactors);
+document.getElementById("ruleSelect").addEventListener("change", autoCalculateFactors);
+
+// 監聽二、三部分所有欄位，達到全即時連動
+["isfInput", "icrInput", "currentBg", "targetBg", "carbs"].forEach(id => {
   document.getElementById(id).addEventListener("input", updateDose);
 });
 </script>
