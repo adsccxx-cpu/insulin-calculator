@@ -32,6 +32,9 @@ h2 { margin-top: 0; color: #555; font-size: 1.2rem; }
 label { display: block; margin-top: 12px; font-weight: bold; }
 input, select { width: 100%; padding: 12px; margin-top: 5px; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
 
+/* 針對輸入錯誤的樣式 */
+input.invalid { border: 2px solid #d9534f; color: #d9534f; background-color: #fff5f5; }
+
 .input-group { display: flex; gap: 8px; align-items: flex-end; }
 .input-group input { flex: 1; }
 .paste-btn { 
@@ -47,8 +50,17 @@ input, select { width: 100%; padding: 12px; margin-top: 5px; font-size: 1rem; bo
   cursor: pointer;
 }
 
-.result { margin-top: 15px; font-weight: bold; font-size: 1.2rem; color: #d9534f; line-height: 1.6; }
+.result { 
+  margin-top: 15px; 
+  font-weight: bold; 
+  font-size: 1.2rem; 
+  color: #d9534f; 
+  line-height: 1.8; 
+  padding-top: 10px;
+  border-top: 2px dashed #eee;
+}
 .tip { font-size: 0.85rem; color: #666; margin-top: 5px; }
+.disclaimer { font-size: 0.75rem; color: #999; text-align: center; margin-top: 20px; }
 
 /* Toast 提示樣式 */
 .toast {
@@ -58,7 +70,7 @@ input, select { width: 100%; padding: 12px; margin-top: 5px; font-size: 1rem; bo
   position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%);
   font-size: 1rem;
 }
-.toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2s; }
+.toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
 @keyframes fadein { from {bottom: 20px; opacity: 0;} to {bottom: 30px; opacity:1;} }
 @keyframes fadeout { from {bottom: 30px; opacity:1;} to {bottom: 20px; opacity:0;} }
 
@@ -81,14 +93,14 @@ input, select { width: 100%; padding: 12px; margin-top: 5px; font-size: 1rem; bo
 
 <div class="instruction">
   💡 <b>使用說明：</b><br>
-  1. 若已知醫師指示之確定的 <b>ISF</b> 與 <b>ICR</b>，可跳過第一部分，直接於第二部分輸入數值。<br>
-  2. 若不確定，請從第一部分輸入每日總劑量 (TDD) 進行估算。
+  1. 若已知醫師指示之確定的 <b>ISF</b> 與 <b>ICR</b>，可跳過第一部分。<br>
+  2. 若不確定，請輸入每日總劑量 (TDD) 進行估算。
 </div>
 
 <div id="toast" class="toast">數值已更新</div>
 
 <div class="section" style="border-left:5px solid #0275d8;">
-  <h2>一、估算係數 (若未知則填寫)</h2>
+  <h2>一、估算係數</h2>
   <label>法則選擇：
   <select id="ruleSelect">
     <option value="1800/500">速效 (1800 / 500)</option>
@@ -97,18 +109,18 @@ input, select { width: 100%; padding: 12px; margin-top: 5px; font-size: 1rem; bo
   </label>
   <label>每日總胰島素 (TDD)：</label>
   <input type="number" id="tdd" inputmode="decimal" placeholder="請輸入每日總劑量">
-  <p class="tip">※ 輸入後將自動帶入下方 ISF 與 ICR。</p>
+  <p class="tip">※ 自動計算 ISF 與 ICR。</p>
 </div>
 
 <div class="section" style="border-left:5px solid #5cb85c;">
   <h2>二、確認或輸入 ISF / ICR</h2>
   <label>ISF 胰島素敏感因子：</label>
   <input type="number" id="isfInput" inputmode="decimal" placeholder="例如：40">
-  <p class="tip">每 1 單位胰島素可降低的血糖值 (mg/dL)</p>
+  <p class="tip">每 1 U 可降低的血糖值 (mg/dL)</p>
   
-  <label>ICR 胰島素與碳水化合物比值：</label>
+  <label>ICR 胰島素與碳水比值：</label>
   <input type="number" id="icrInput" inputmode="decimal" placeholder="例如：10">
-  <p class="tip">每 1 單位胰島素可處理的碳水化合物克數 (g)</p>
+  <p class="tip">每 1 U 可處理的碳水克數 (g)</p>
 </div>
 
 <div class="section" style="border-left:5px solid #f0ad4e;">
@@ -117,7 +129,7 @@ input, select { width: 100%; padding: 12px; margin-top: 5px; font-size: 1rem; bo
   <input type="number" id="currentBg" inputmode="numeric" placeholder="請測量血糖">
   
   <label>目標血糖：</label>
-  <input type="number" id="targetBg" value="150" min="100" max="180" inputmode="numeric">
+  <input type="number" id="targetBg" value="150" inputmode="numeric">
   <p class="tip">建議範圍：100 - 180 mg/dL</p>
   
   <label>餐點碳水量 (公克)：</label>
@@ -136,6 +148,11 @@ input, select { width: 100%; padding: 12px; margin-top: 5px; font-size: 1rem; bo
 <div class="section" style="border-left:5px solid #6c757d;">
   <h2>四、實用工具連結</h2>
   <a href="https://adsccxx-cpu.github.io/CHO_calculate.html/" target="_blank" class="link-button">前往：碳水化合物計算機</a>
+</div>
+
+<div class="disclaimer">
+  *本工具僅供參考，調整劑量前請諮詢專業醫療人員。<br>
+  © 臨床營養與糖尿病衛教工具
 </div>
 
 <script>
@@ -178,7 +195,7 @@ function autoCalculateFactors() {
     }
     document.getElementById("isfInput").value = isf;
     document.getElementById("icrInput").value = icr;
-    showToast("係數已根據 TDD 更新");
+    showToast("係數已更新");
   }
   updateDose();
 }
@@ -191,46 +208,72 @@ function updateDose(){
   const target = parseFloat(document.getElementById("targetBg").value);
   const carbs = parseFloat(document.getElementById("carbs").value);
   
+  const bgInput = document.getElementById("currentBg");
+  const resultDiv = document.getElementById("doseResult");
+
+  // 1. 血糖輸入安全性檢查 (紅色提示)
+  if (current > 600 || (current < 40 && current > 0)) {
+    bgInput.classList.add("invalid");
+  } else {
+    bgInput.classList.remove("invalid");
+  }
+
+  // 2. 基本欄位檢查
   if(!isf || !icr || isNaN(current) || isNaN(target)){ 
-    document.getElementById("doseResult").innerHTML = "修正劑量：-- U<br>餐點劑量：-- U<br>建議補打：-- U"; 
+    resultDiv.innerHTML = "修正劑量：-- U<br>餐點劑量：-- U<br>建議補打：-- U"; 
     return;
   }
 
   let meal = !isNaN(carbs) ? carbs/icr : 0;
   
+  // 3. 臨床風險判斷
   if(current < 71){
-    document.getElementById("doseResult").innerHTML = "⚠ 低血糖危險！請立刻補充15克糖，不可補打！";
+    resultDiv.innerHTML = "⚠ 低血糖危險！請立刻補充15克糖，不可補打！";
     return;
   }
   if(current > 599){
-    document.getElementById("doseResult").innerHTML = "⚠ 血糖過高(HI)，請立即就醫！";
+    resultDiv.innerHTML = "⚠ 血糖過高(HI)，可能輸入錯誤，請再確認或立即就醫！";
     return;
   }
   
   if(current < 100){
-    document.getElementById("doseResult").innerHTML = `⚠ 修正劑量：0 U <br>建議補打(餐點劑量)：${Math.floor(meal*0.5)} U`;
+    resultDiv.innerHTML = `⚠ 修正劑量：0 U <br>建議補打(餐點劑量減半)：${(meal*0.5).toFixed(1)} U`;
     return;
   }
   
   if(current < target){
-    document.getElementById("doseResult").innerHTML = `⚠ 修正劑量：0 U <br>建議補打(餐點劑量)：${Math.floor(meal)} U`;
+    resultDiv.innerHTML = `修正劑量：0 U <br>餐點劑量：${meal.toFixed(1)} U<br>建議補打：${Math.floor(meal)} U`;
     return;
   }
 
+  // 4. 正常計算
   let correction = (current - target) / isf;
-  let total = Math.floor(correction + meal);
+  let total = Math.floor(correction + meal); // 通常臨床補打取整數或無條件捨去較安全
 
-  document.getElementById("doseResult").innerHTML = 
+  resultDiv.innerHTML = 
     `修正劑量：${correction.toFixed(1)} U<br>
      餐點劑量：${meal.toFixed(1)} U<br>
      建議補打：${total} U`; 
 }
- 
+
+// 監聽目標血糖範圍 (100-180)
+document.getElementById("targetBg").addEventListener("change", function() {
+  let val = parseFloat(this.value);
+  if (val < 100) {
+    this.value = 100;
+    showToast("目標值建議不低於 100");
+  } else if (val > 180) {
+    this.value = 180;
+    showToast("目標值建議不高於 180");
+  }
+  updateDose();
+});
+
 // 監聽第一部分
 document.getElementById("tdd").addEventListener("input", autoCalculateFactors);
 document.getElementById("ruleSelect").addEventListener("change", autoCalculateFactors);
 
-// 監聽第二部分手動修改 (加入 Toast 提醒)
+// 監聽係數手動修改
 document.getElementById("isfInput").addEventListener("change", () => showToast("ISF 已手動更新"));
 document.getElementById("icrInput").addEventListener("change", () => showToast("ICR 已手動更新"));
 
